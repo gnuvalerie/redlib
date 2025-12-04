@@ -81,26 +81,17 @@ jobs:
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
-      - name: Login to Quay.io Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USERNAME }}
-          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf '${{ env.REGISTRY_IMAGE }}@sha256:%s ' *)
-
-      # - name: Push README to Quay.io
-      #   uses: christian-korneck/update-container-description-action@v1
-      #   env:
-      #     DOCKER_APIKEY: ${{ secrets.APIKEY__QUAY_IO }}
-      #   with:
-      #     destination_container_repo: quay.io/redlib/redlib
-      #     provider: quay
-      #     readme_file: 'README.md'
 
       - name: Inspect image
         run: |
